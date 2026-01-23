@@ -1,5 +1,6 @@
 
 import scala.util.Try
+import ujson.{Obj, Arr}
 
 @main def hello(): Unit =
   val url = "https://marsapi.ams.usda.gov/services/v3.1/reports"
@@ -39,20 +40,52 @@ import scala.util.Try
         commodity.wtd_avg_price
 
   val avocadoPrices = avocadosOpt.map: avocados =>
-    avocados.filter: commodity =>
+    val avocadoStrings = avocados.filter: commodity =>
       (commodity.region == "Northeast" || commodity.region == "National") && commodity.size == "each"
+    .map: commodity =>
+      commodity.asSeq
+    .sorted
+    
+    val table = SlackBlocks.table(
+      Seq("Region", "Variety", "Organic?", "Price"),
+      avocadoStrings
+    )
+
+    val payload =
+      Obj(
+        "text" -> "Avocado Prices",
+        "blocks" -> Arr(
+          SlackBlocks.header("Avocado Prices"),
+          table
+        )
+      )
+    
+    payload
+
+  println(avocadoPrices)
+
 
   val webhookUrl = Secrets.slackWebhook
-  val payload = ujson.Obj("text" -> "🥑 Hello from AvocadoBot (test webhook)!")
+  // // val payload = ujson.Obj("text" -> "🥑 Hello from AvocadoBot (test webhook)!")
 
-  val postResp = requests.post(
-    url = webhookUrl,
-    data = payload.render(),
-    headers = Seq("Content-Type" -> "application/json")
-  )
+  avocadoPrices.foreach: payload =>
+    val postResp = requests.post(
+      url = webhookUrl,
+      data = payload.render(),
+      headers = Seq("Content-Type" -> "application/json")
+    )
 
-  println(postResp.statusCode)
-  println(postResp.text())
+    println(postResp.statusCode)
+    println(postResp.text())
+
+  // val postResp = requests.post(
+  //   url = webhookUrl,
+  //   data = payload.render(),
+  //   headers = Seq("Content-Type" -> "application/json")
+  // )
+
+  // println(postResp.statusCode)
+  // println(postResp.text())
   
 
   // println(avocadoPriceGroups)

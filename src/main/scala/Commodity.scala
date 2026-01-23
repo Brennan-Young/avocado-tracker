@@ -1,4 +1,5 @@
 import upickle.{ReadWriter, macroRW}
+import ujson.Obj
 
 case class ReportDetails(
   reportSection: String,
@@ -19,7 +20,9 @@ case class Commodity(
   variety: String,
   organic: String,
   wtd_avg_price: Double
-)
+) {
+  def asSeq: Seq[String] = Seq(region, variety, organic, wtd_avg_price.toString)
+}
 
 object Commodity:
   implicit val rw: ReadWriter[Commodity] = macroRW
@@ -62,3 +65,40 @@ case class WebhookRow(
 object WebhookRow {
   implicit val rw: ReadWriter[WebhookRow] = macroRW
 }
+
+object SlackBlocks:
+
+  private def textCell(value: String): Obj =
+    Obj(
+      "type" -> "raw_text",
+      "text" -> value
+    )
+
+  def table(
+      headers: Seq[String],
+      rows: Seq[Seq[String]]
+  ): Obj =
+    require(
+      rows.forall(_.length == headers.length),
+      "All rows must have the same number of columns as headers"
+    )
+
+    Obj(
+      "type" -> "table",
+      // "column_settings" -> headers.map(textCell),
+      "rows" -> {
+        val a = headers.map(textCell)
+        val b = rows.map(row => row.map(textCell))
+        a +: b
+      }
+    )
+
+  def header(text: String): Obj =
+    Obj(
+      "type" -> "header",
+      "text" -> Obj(
+        "type" -> "plain_text",
+        "text" -> text,
+        "emoji" -> true
+      )
+    )
