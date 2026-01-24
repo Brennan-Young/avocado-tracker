@@ -12,6 +12,8 @@ import ujson.{Obj, Arr}
 
   val usdaApiKey = Secrets.usdaApiKey
 
+  println("key size: " + usdaApiKey.size)
+
   val resp = requests.get(
     s"${url}/${reportSlugId}",
     params = queryParams,
@@ -62,11 +64,8 @@ import ujson.{Obj, Arr}
     
     payload
 
-  println(avocadoPrices)
-
 
   val webhookUrl = Secrets.slackWebhook
-  // // val payload = ujson.Obj("text" -> "🥑 Hello from AvocadoBot (test webhook)!")
 
   avocadoPrices.foreach: payload =>
     val postResp = requests.post(
@@ -77,20 +76,7 @@ import ujson.{Obj, Arr}
 
     println(postResp.statusCode)
     println(postResp.text())
-
-  // val postResp = requests.post(
-  //   url = webhookUrl,
-  //   data = payload.render(),
-  //   headers = Seq("Content-Type" -> "application/json")
-  // )
-
-  // println(postResp.statusCode)
-  // println(postResp.text())
   
-
-  // println(avocadoPriceGroups)
-  
-
 object Secrets:
   def requiredEnv(name: String): String =
     sys.env.getOrElse(
@@ -99,4 +85,4 @@ object Secrets:
     )
 
   lazy val usdaApiKey: String      = requiredEnv("USDA_MMN_API_KEY")
-  lazy val slackWebhook: String    = requiredEnv("SLACK_WEBHOOK")
+  lazy val slackWebhook: String    = requiredEnv("SLACK_WEBHOOK_URL")
