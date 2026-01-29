@@ -2,7 +2,7 @@ name: Weekly Avocado Price
 
 on:
   schedule:
-    - cron: "37 * * * *"
+    - cron: "* 17 * * 3"
   workflow_dispatch: {}
 
 jobs:
